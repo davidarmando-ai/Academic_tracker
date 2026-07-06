@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Calendário - AcademicTracker{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 animate-fade-in">
+    <h4 class="mb-0"><i class="bi bi-calendar3"></i> Calendário</h4>
+    <a href="{{ url_for('calendar.new_event') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> Novo Evento
+    </a>
+</div>
+
+<div class="card animate-scale-in">
+    <div class="card-body">
+        <div class="calendar-header">
+            <a href="{{ url_for('calendar.view_calendar', ano=ano_anterior, mes=mes_anterior) }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <h5 class="mb-0">{{ mes_atual }} {{ ano }}</h5>
+            <a href="{{ url_for('calendar.view_calendar', ano=ano_seguinte, mes=mes_seguinte) }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr class="text-center">
+                        {% for dia in dias_semana_pt %}
+                        <th class="small text-muted py-2">{{ dia }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for semana in dias_mes %}
+                    <tr>
+                        {% for dia in semana %}
+                        <td class="calendar-day {% if dia.hoje %}today{% endif %} {% if dia.fora_mes %}other-month{% endif %}"
+                            style="width: 14.28%;">
+                            <div class="day-number">{{ dia.data.day }}</div>
+                            {% for evento in dia.eventos[:3] %}
+                            <div class="calendar-event {{ evento.tipo }}"
+                                 title="{{ evento.titulo }} ({{ {'exame':'Exame','entrega':'Entrega','aula':'Aula','outro':'Outro'}[evento.tipo] }})">
+                                <i class="bi bi-dot"></i> {{ evento.titulo[:20] }}
+                            </div>
+                            {% endfor %}
+                            {% for tarefa in dia.tarefas[:2] %}
+                            <div class="calendar-event task"
+                                 title="Tarefa: {{ tarefa.titulo }} - {{ {'pendente':'Pendente','em_progresso':'Em Progresso','concluida':'Concluída'}[tarefa.estado] }}">
+                                <i class="bi bi-check2-square"></i> {{ tarefa.titulo[:20] }}
+                            </div>
+                            {% endfor %}
+                            {% if dia.eventos|length > 3 or dia.tarefas|length > 2 %}
+                            <small class="text-muted">+{{ (dia.eventos|length - 3) + (dia.tarefas|length - 2) }} mais</small>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-6 mb-3 animate-on-scroll">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Legenda</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-3">
+                    <span><span class="calendar-event exame d-inline-block" style="width:auto;">Exame</span></span>
+                    <span><span class="calendar-event entrega d-inline-block" style="width:auto;">Entrega</span></span>
+                    <span><span class="calendar-event aula d-inline-block" style="width:auto;">Aula</span></span>
+                    <span><span class="calendar-event outro d-inline-block" style="width:auto;">Outro</span></span>
+                    <span><span class="calendar-event task d-inline-block" style="width:auto;">Tarefa</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3 animate-on-scroll">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-list"></i> Eventos</h6>
+            </div>
+            <div class="card-body">
+                {% set eventos_mes = [] %}
+                {% for semana in dias_mes %}
+                {% for dia in semana %}
+                {% for evento in dia.eventos %}
+                {% set _ = eventos_mes.append(evento) %}
+                {% endfor %}
+                {% endfor %}
+                {% endfor %}
+                {% if eventos_mes %}
+                <ul class="list-unstyled mb-0 stagger-children">
+                    {% for evento in eventos_mes[:5] %}
+                    <li class="mb-1 py-1">
+                        <span class="calendar-event {{ evento.tipo }} d-inline-block" style="width:auto;">
+                            {{ evento.data.strftime('%d/%m') }}
+                        </span>
+                        {{ evento.titulo }}
+                        <a href="{{ url_for('calendar.edit_event', event_id=evento.id) }}" class="text-decoration-none ms-1">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small mb-0">Nenhum evento este mês.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

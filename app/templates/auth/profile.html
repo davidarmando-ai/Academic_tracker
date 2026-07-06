@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Perfil - AcademicTracker{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mb-3 animate-on-scroll">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-gear"></i> Editar Perfil</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.nome.label(class="form-label") }}
+                        {{ form.nome(class="form-control" + (" is-invalid" if form.nome.errors else "")) }}
+                        {% for error in form.nome.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                        {% for error in form.email.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" name="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Atualizar Perfil
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3 animate-on-scroll">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-key"></i> Alterar Palavra-passe</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.change_password') }}">
+                    {{ password_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ password_form.current_password.label(class="form-label") }}
+                        {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else "")) }}
+                        {% for error in password_form.current_password.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ password_form.new_password.label(class="form-label") }}
+                        {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else "")) }}
+                        {% for error in password_form.new_password.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ password_form.confirm_new_password.label(class="form-label") }}
+                        {{ password_form.confirm_new_password(class="form-control" + (" is-invalid" if password_form.confirm_new_password.errors else "")) }}
+                        {% for error in password_form.confirm_new_password.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">
+                        {{ password_form.submit(class="btn btn-warning") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3 animate-fade-in">
+            <div class="card-body text-center text-muted">
+                <small>Membro desde {{ current_user.data_criacao.strftime('%d/%m/%Y') }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

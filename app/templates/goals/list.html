@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Metas - AcademicTracker{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 animate-fade-in">
+    <h4 class="mb-0"><i class="bi bi-trophy"></i> Metas de Estudo</h4>
+    <div>
+        <a href="{{ url_for('goals.history') }}" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-clock-history"></i> Histórico
+        </a>
+        <a href="{{ url_for('goals.new_goal') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Nova Meta
+        </a>
+    </div>
+</div>
+
+{% if goals %}
+<h5 class="mb-3 animate-fade-in">Metas Ativas</h5>
+<div class="stagger-children">
+{% for goal in goals %}
+<div class="card mb-3 animate-scale-in">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <h5 class="card-title mb-1">{{ goal.titulo }}</h5>
+                {% if goal.descricao %}
+                <p class="text-muted small mb-2">{{ goal.descricao }}</p>
+                {% endif %}
+                <div class="d-flex gap-3 small text-muted">
+                    <span><i class="bi bi-clock"></i> {{ goal.horas_concluidas }}h / {{ goal.horas_objetivo }}h</span>
+                    {% if goal.prazo %}
+                    <span><i class="bi bi-calendar"></i> Prazo: {{ goal.prazo.strftime('%d/%m/%Y') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="text-end">
+                <h3 class="mb-0 {% if goal.progresso_percentual >= 100 %}text-success{% elif goal.progresso_percentual >= 50 %}text-warning{% else %}text-primary{% endif %}">
+                    {{ goal.progresso_percentual }}%
+                </h3>
+            </div>
+        </div>
+        <div class="progress goal-progress mb-3">
+            <div class="progress-bar {% if goal.progresso_percentual >= 100 %}bg-success{% elif goal.progresso_percentual >= 50 %}bg-warning{% else %}bg-primary{% endif %}"
+                 role="progressbar" style="width: {{ goal.progresso_percentual }}%"
+                 aria-valuenow="{{ goal.progresso_percentual }}" aria-valuemin="0" aria-valuemax="100">
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <form action="{{ url_for('goals.update_progress', goal_id=goal.id) }}" method="POST" class="d-flex gap-2 align-items-center flex-grow-1">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="input-group input-group-sm" style="max-width: 200px;">
+                    <input type="number" name="horas_concluidas" class="form-control" step="0.5"
+                           value="{{ goal.horas_concluidas }}" min="0" max="{{ goal.horas_objetivo }}">
+                    <button type="submit" class="btn btn-outline-primary">Atualizar</button>
+                </div>
+            </form>
+            <a href="{{ url_for('goals.edit_goal', goal_id=goal.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form action="{{ url_for('goals.delete_goal', goal_id=goal.id) }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('Tem a certeza que deseja excluir esta meta?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state animate-fade-in">
+    <i class="bi bi-bullseye"></i>
+    <h5>Nenhuma meta de estudo ativa</h5>
+    <p>Defina metas para acompanhar o seu progresso nos estudos!</p>
+    <a href="{{ url_for('goals.new_goal') }}" class="btn btn-primary">Criar Meta</a>
+</div>
+{% endif %}
+
+{% if goals_concluidas %}
+<h5 class="mb-3 mt-4 animate-fade-in">Metas Concluídas</h5>
+<div class="stagger-children">
+{% for goal in goals_concluidas %}
+<div class="card mb-2 border-success animate-scale-in">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-success me-2"><i class="bi bi-check-circle-fill"></i></span>
+                <strong>{{ goal.titulo }}</strong>
+                <small class="text-muted ms-2">{{ goal.horas_concluidas }}h / {{ goal.horas_objetivo }}h</small>
+            </div>
+            <small class="text-muted">Concluída</small>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

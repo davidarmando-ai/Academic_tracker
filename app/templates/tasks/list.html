@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Tarefas - AcademicTracker{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 animate-fade-in">
+    <h4 class="mb-0"><i class="bi bi-check2-square"></i> As Minhas Tarefas</h4>
+    <div>
+        <a href="{{ url_for('tasks.kanban') }}" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-columns-gap"></i> Kanban
+        </a>
+        <a href="{{ url_for('tasks.new_task') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Nova Tarefa
+        </a>
+    </div>
+</div>
+
+<div class="card animate-slide-down mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small">Estado</label>
+                <select name="estado" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    <option value="pendente" {{ 'selected' if filtro_estado == 'pendente' }}>Pendente</option>
+                    <option value="em_progresso" {{ 'selected' if filtro_estado == 'em_progresso' }}>Em Progresso</option>
+                    <option value="concluida" {{ 'selected' if filtro_estado == 'concluida' }}>Concluída</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Prioridade</label>
+                <select name="prioridade" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    <option value="alta" {{ 'selected' if filtro_prioridade == 'alta' }}>Alta</option>
+                    <option value="media" {{ 'selected' if filtro_prioridade == 'media' }}>Média</option>
+                    <option value="baixa" {{ 'selected' if filtro_prioridade == 'baixa' }}>Baixa</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Disciplina</label>
+                <select name="disciplina" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    {% for d in disciplinas %}
+                    <option value="{{ d }}" {{ 'selected' if filtro_disciplina == d }}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Ordenar por</label>
+                <select name="ordenar" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="data_entrega" {{ 'selected' if ordenar_por == 'data_entrega' }}>Data</option>
+                    <option value="prioridade" {{ 'selected' if ordenar_por == 'prioridade' }}>Prioridade</option>
+                    <option value="titulo" {{ 'selected' if ordenar_por == 'titulo' }}>Título</option>
+                    <option value="disciplina" {{ 'selected' if ordenar_por == 'disciplina' }}>Disciplina</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if tasks %}
+<div class="stagger-children">
+{% for task in tasks %}
+<div class="card prioridade-{{ task.prioridade }} mb-2 animate-scale-in">
+    <div class="card-body py-3">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    {% if task.estado == 'concluida' %}
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                    {% elif task.estado == 'em_progresso' %}
+                    <span class="text-warning"><i class="bi bi-arrow-repeat"></i></span>
+                    {% else %}
+                    <span class="text-secondary"><i class="bi bi-circle"></i></span>
+                    {% endif %}
+                    <h6 class="mb-0 {% if task.estado == 'concluida' %}text-decoration-line-through text-muted{% endif %}">
+                        {{ task.titulo }}
+                    </h6>
+                    <span class="badge priority-badge bg-{{ 'danger' if task.prioridade == 'alta' else 'warning' if task.prioridade == 'media' else 'success' }}">
+                        {{ task.prioridade }}
+                    </span>
+                    <span class="badge bg-{{ 'secondary' if task.estado == 'pendente' else 'warning' if task.estado == 'em_progresso' else 'success' }}">
+                        {{ {'pendente': 'Pendente', 'em_progresso': 'Em Progresso', 'concluida': 'Concluída'}[task.estado] }}
+                    </span>
+                </div>
+                {% if task.descricao %}
+                <p class="text-muted small mb-1">{{ task.descricao }}</p>
+                {% endif %}
+                <div class="d-flex gap-3 small text-muted">
+                    {% if task.disciplina %}
+                    <span><i class="bi bi-book"></i> {{ task.disciplina }}</span>
+                    {% endif %}
+                    {% if task.data_entrega %}
+                    <span data-deadline="{{ task.data_entrega.isoformat() }}">
+                        <i class="bi bi-calendar"></i> {{ task.data_entrega.strftime('%d/%m/%Y') }}
+                        {% if task.data_entrega == hoje and task.estado != 'concluida' %}(Hoje!){% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex gap-1 ms-3">
+                <form action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-{{ 'success' if task.estado != 'concluida' else 'secondary' }}"
+                            title="Mudar estado">
+                        <i class="bi bi-{% if task.estado == 'pendente' %}play{% elif task.estado == 'em_progresso' %}check{% else %}arrow-counterclockwise{% endif %}"></i>
+                    </button>
+                </form>
+                <a href="{{ url_for('tasks.edit_task', task_id=task.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST" class="d-inline"
+                      onsubmit="return confirm('Tem a certeza que deseja excluir esta tarefa?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state animate-fade-in">
+    <i class="bi bi-inbox"></i>
+    <h5>Nenhuma tarefa encontrada</h5>
+    <p>Crie a sua primeira tarefa para começar a organizar-se!</p>
+    <a href="{{ url_for('tasks.new_task') }}" class="btn btn-primary">Criar Tarefa</a>
+</div>
+{% endif %}
+{% endblock %}
